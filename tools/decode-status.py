@@ -28,12 +28,13 @@ Instructions:
     and store it in file status.json
 
 Usage:
-    ./decode-status.py -d <hostname or IP address>
+    ./decode-status.py -d <hostname or IP address> [-u username] [-p password]
         or
     ./decode-status.py -f <JSON status information file>
 
 Example:
     ./decode-status.py -d sonoff1
+    ./decode-status.py -d sonoff1 -p 12345678
         or
 	./decode-status.py -f status.json
 """
@@ -42,6 +43,7 @@ import io
 import os.path
 import json
 import pycurl
+import urllib2
 from sys import exit
 from optparse import OptionParser
 from StringIO import StringIO
@@ -103,7 +105,7 @@ a_features = [[
     "USE_WS2812_DMA","USE_IR_REMOTE","USE_IR_HVAC","USE_IR_RECEIVE",
     "USE_DOMOTICZ","USE_DISPLAY","USE_HOME_ASSISTANT","USE_SERIAL_BRIDGE",
     "USE_TIMERS","USE_SUNRISE","USE_TIMERS_WEB","USE_RULES",
-    "USE_KNX","USE_WPS","USE_SMARTCONFIG",""
+    "USE_KNX","USE_WPS","USE_SMARTCONFIG","MQTT_ARDUINOMQTT"
     ],[
     "USE_CONFIG_OVERRIDE","BE_MINIMAL","USE_SENSORS","USE_CLASSIC",
     "USE_KNX_NO_EMULATION","USE_DISPLAY_MODES1TO5","USE_DISPLAY_GRAPH","USE_DISPLAY_LCD",
@@ -125,8 +127,8 @@ a_features = [[
     ],[
     "USE_MCP230xx","USE_MPR121","USE_CCS811","USE_MPU6050",
     "USE_MCP230xx_OUTPUT","USE_MCP230xx_DISPLAYOUTPUT","USE_HLW8012","USE_CSE7766",
-    "USE_MCP39F501","USE_PZEM2","","",
-    "","","","",
+    "USE_MCP39F501","USE_PZEM_AC","USE_DS3231","USE_HX711",
+    "USE_PZEM_DC","","","",
     "","","","",
     "","","","",
     "","","","",
@@ -136,13 +138,20 @@ usage = "usage: decode-status {-d | -f} arg"
 parser = OptionParser(usage)
 parser.add_option("-d", "--dev", action="store", type="string",
                   dest="device", help="device to retrieve status from")
+parser.add_option("-u", "--username", action="store", type="string",
+                  dest="username", help="username for login", default="admin")
+parser.add_option("-p", "--password", action="store", type="string",
+                  dest="password", help="password for login", default=None)
 parser.add_option("-f", "--file", metavar="FILE",
                   dest="jsonfile", default="status.json", help="status json file (default: status.json)")
 (options, args) = parser.parse_args()
 
 if (options.device):
     buffer = StringIO()
-    url = str("http://{}/cm?cmnd=status%200".format(options.device))
+    loginstr = ""
+    if options.password is not None:
+        loginstr = "user={}&password={}&".format(urllib2.quote(options.username), urllib2.quote(options.password))
+    url = str("http://{}/cm?{}cmnd=status%200".format(options.device, loginstr))
     c = pycurl.Curl()
     c.setopt(c.URL, url)
     c.setopt(c.WRITEDATA, buffer)

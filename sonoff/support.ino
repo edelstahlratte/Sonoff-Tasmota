@@ -243,6 +243,22 @@ char* Unescape(char* buffer, uint16_t* size)
   return buffer;
 }
 
+char* RemoveSpace(char* p)
+{
+  char* write = p;
+  char* read = p;
+  char ch = '.';
+
+  while (ch != '\0') {
+    ch = *read++;
+    if (!isspace(ch)) {
+      *write++ = ch;
+    }
+  }
+  *write = '\0';
+  return p;
+}
+
 char* UpperCase(char* dest, const char* source)
 {
   char* write = dest;
@@ -494,6 +510,32 @@ double FastPrecisePow(double a, double b)
   return r * u.d;
 }
 
+uint32_t SqrtInt(uint32_t num)
+{
+  if (num <= 1) {
+    return num;
+  }
+
+  uint32_t x = num / 2;
+  uint32_t y;
+  do {
+    y = (x + num / x) / 2;
+    if (y >= x) {
+      return x;
+    }
+    x = y;
+  } while (true);
+}
+
+uint32_t RoundSqrtInt(uint32_t num)
+{
+  uint32_t s = SqrtInt(4 * num);
+  if (s & 1) {
+    s++;
+  }
+  return s / 2;
+}
+
 char* GetTextIndexed(char* destination, size_t destination_size, uint16_t index, const char* haystack)
 {
   // Returns empty string if not found
@@ -605,14 +647,22 @@ boolean GetUsedInModule(byte val, uint8_t *arr)
   if (GPIO_MHZ_TXD == val) { return true; }
   if (GPIO_MHZ_RXD == val) { return true; }
 #endif
+
+  int pzem = 3;
 #ifndef USE_PZEM004T
-  if (GPIO_PZEM_TX == val) { return true; }
-  if (GPIO_PZEM_RX == val) { return true; }
+  pzem--;
+  if (GPIO_PZEM004_RX == val) { return true; }
 #endif
-#ifndef USE_PZEM2
-  if (GPIO_PZEM2_TX == val) { return true; }
-  if (GPIO_PZEM2_RX == val) { return true; }
+#ifndef USE_PZEM_AC
+  pzem--;
+  if (GPIO_PZEM016_RX == val) { return true; }
 #endif
+#ifndef USE_PZEM_DC
+  pzem--;
+  if (GPIO_PZEM017_RX == val) { return true; }
+#endif
+  if (!pzem && (GPIO_PZEM0XX_TX == val)) { return true; }
+
 #ifndef USE_SENSEAIR
   if (GPIO_SAIR_TX == val) { return true; }
   if (GPIO_SAIR_RX == val) { return true; }
@@ -651,6 +701,10 @@ boolean GetUsedInModule(byte val, uint8_t *arr)
   if (GPIO_TM16CLK == val) { return true; }
   if (GPIO_TM16DIO == val) { return true; }
   if (GPIO_TM16STB == val) { return true; }
+#endif
+#ifndef USE_HX711
+  if (GPIO_HX711_SCK == val) { return true; }
+  if (GPIO_HX711_DAT == val) { return true; }
 #endif
   if ((val >= GPIO_REL1) && (val < GPIO_REL1 + MAX_RELAYS)) {
     offset = (GPIO_REL1_INV - GPIO_REL1);
@@ -702,6 +756,23 @@ void ClaimSerial()
   SetSeriallog(LOG_LEVEL_NONE);
   baudrate = Serial.baudRate();
   Settings.baudrate = baudrate / 1200;
+}
+
+void SerialSendRaw(char *codes)
+{
+  char *p;
+  char stemp[3];
+  uint8_t code;
+
+  int size = strlen(codes);
+
+  while (size > 0) {
+    snprintf(stemp, sizeof(stemp), codes);
+    code = strtol(stemp, &p, 16);
+    Serial.write(code);
+    size -= 2;
+    codes += 2;
+  }
 }
 
 uint32_t GetHash(const char *buffer, size_t size)
@@ -835,7 +906,7 @@ void GetFeatures()
 #if (MQTT_LIBRARY_TYPE == MQTT_TASMOTAMQTT)
   feature_drv1 |= 0x00000800;  // xdrv_01_mqtt.ino
 #endif
-#if (MQTT_LIBRARY_TYPE == MQTT_ESPMQTTARDUINO)
+#if (MQTT_LIBRARY_TYPE == MQTT_ESPMQTTARDUINO)      // Obsolete since 6.2.1.11
   feature_drv1 |= 0x00001000;  // xdrv_01_mqtt.ino
 #endif
 #ifdef MQTT_HOST_DISCOVERY
@@ -891,6 +962,9 @@ void GetFeatures()
 #endif
 #ifdef USE_SMARTCONFIG
   feature_drv1 |= 0x40000000;  // support.ino
+#endif
+#if (MQTT_LIBRARY_TYPE == MQTT_ARDUINOMQTT)
+  feature_drv1 |= 0x80000000;  // xdrv_01_mqtt.ino
 #endif
 
 /*********************************************************************************************/
@@ -1100,8 +1174,17 @@ void GetFeatures()
 #ifdef USE_MCP39F501
   feature_sns2 |= 0x00000100;  // xnrg_04_mcp39f501.ino
 #endif
-#ifdef USE_PZEM2
-  feature_sns2 |= 0x00000200;  // xnrg_05_pzem2.ino
+#ifdef USE_PZEM_AC
+  feature_sns2 |= 0x00000200;  // xnrg_05_pzem_ac.ino
+#endif
+#ifdef USE_DS3231
+  feature_sns2 |= 0x00000400;  // xsns_33_ds3231.ino
+#endif
+#ifdef USE_HX711
+  feature_sns2 |= 0x00000800;  // xsns_34_hx711.ino
+#endif
+#ifdef USE_PZEM_DC
+  feature_sns2 |= 0x00001000;  // xnrg_06_pzem_dc.ino
 #endif
 
 }
@@ -1254,13 +1337,13 @@ void WiFiSetSleepMode()
  * See https://github.com/arendst/Sonoff-Tasmota/issues/2559
  */
 
-//#ifdef ARDUINO_ESP8266_RELEASE_2_4_1
+// Sleep explanation: https://github.com/esp8266/Arduino/blob/3f0c601cfe81439ce17e9bd5d28994a7ed144482/libraries/ESP8266WiFi/src/ESP8266WiFiGeneric.cpp#L255
 #if defined(ARDUINO_ESP8266_RELEASE_2_4_1) || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
 #else  // Enabled in 2.3.0, 2.4.0 and stage
   if (sleep) {
     WiFi.setSleepMode(WIFI_LIGHT_SLEEP);  // Allow light sleep during idle times
   } else {
-    WiFi.setSleepMode(WIFI_MODEM_SLEEP);  // Diable sleep (Esp8288/Arduino core and sdk default)
+    WiFi.setSleepMode(WIFI_MODEM_SLEEP);  // Disable sleep (Esp8288/Arduino core and sdk default)
   }
 #endif
 }
@@ -1278,6 +1361,7 @@ void WifiBegin(uint8_t flag)
   WiFi.mode(WIFI_OFF);      // See https://github.com/esp8266/Arduino/issues/2186
 #endif
 
+  WiFi.persistent(false);   // Solve possible wifi init errors (re-add at 6.2.1.16 #4044, #4083)
   WiFi.disconnect(true);    // Delete SDK wifi config
   delay(200);
   WiFi.mode(WIFI_STA);      // Disable AP mode
@@ -1734,27 +1818,35 @@ int8_t I2cWriteBuffer(uint8_t addr, uint8_t reg, uint8_t *reg_data, uint16_t len
 
 void I2cScan(char *devs, unsigned int devs_len)
 {
-  byte error;
-  byte address;
+  // Return error codes defined in twi.h and core_esp8266_si2c.c
+  // I2C_OK                      0
+  // I2C_SCL_HELD_LOW            1 = SCL held low by another device, no procedure available to recover
+  // I2C_SCL_HELD_LOW_AFTER_READ 2 = I2C bus error. SCL held low beyond slave clock stretch time
+  // I2C_SDA_HELD_LOW            3 = I2C bus error. SDA line held low by slave/another_master after n bits
+  // I2C_SDA_HELD_LOW_AFTER_INIT 4 = line busy. SDA again held low by another device. 2nd master?
+
+  byte error = 0;
+  byte address = 0;
   byte any = 0;
-  char tstr[10];
 
   snprintf_P(devs, devs_len, PSTR("{\"" D_CMND_I2CSCAN "\":\"" D_JSON_I2CSCAN_DEVICES_FOUND_AT));
   for (address = 1; address <= 127; address++) {
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
     if (0 == error) {
-      snprintf_P(tstr, sizeof(tstr), PSTR(" 0x%2x"), address);
-      strncat(devs, tstr, devs_len);
       any = 1;
+      snprintf_P(devs, devs_len, PSTR("%s 0x%02x"), devs, address);
     }
-    else if (4 == error) {
-      snprintf_P(devs, devs_len, PSTR("{\"" D_CMND_I2CSCAN "\":\"" D_JSON_I2CSCAN_UNKNOWN_ERROR_AT " 0x%2x\"}"), address);
+    else if (error != 2) {  // Seems to happen anyway using this scan
+      any = 2;
+      snprintf_P(devs, devs_len, PSTR("{\"" D_CMND_I2CSCAN "\":\"Error %d at 0x%02x"), error, address);
+      break;
     }
   }
   if (any) {
     strncat(devs, "\"}", devs_len);
-  } else {
+  }
+  else {
     snprintf_P(devs, devs_len, PSTR("{\"" D_CMND_I2CSCAN "\":\"" D_JSON_I2CSCAN_NO_DEVICES_FOUND "\"}"));
   }
 }

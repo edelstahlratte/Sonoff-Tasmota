@@ -46,6 +46,7 @@
 #define D_JSON_COMMAND "Command"
 #define D_JSON_CONNECT_FAILED "Connect failed"
 #define D_JSON_COREVERSION "Core"
+#define D_JSON_COUNT "Count"
 #define D_JSON_COUNTER "Counter"
 #define D_JSON_CURRENT "Current"         // As in Voltage and Current
 #define D_JSON_DATA "Data"
@@ -130,11 +131,14 @@
 #define D_JSON_TYPE "Type"
 #define D_JSON_UPTIME "Uptime"
 #define D_JSON_UTC_TIME "UTC"
-#define D_JSON_UVINDEX "UvIndex"
+#define D_JSON_UV_INDEX "UvIndex"
+#define D_JSON_UV_INDEX_TEXT "UvIndexText"
 #define D_JSON_UV_LEVEL "UvLevel"
+#define D_JSON_UV_POWER "UvPower"
 #define D_JSON_VCC "Vcc"
 #define D_JSON_VERSION "Version"
 #define D_JSON_VOLTAGE "Voltage"
+#define D_JSON_WEIGHT "Weight"
 #define D_JSON_WIFI "Wifi"
 #define D_JSON_WRONG "Wrong"
 #define D_JSON_WRONG_PARAMETERS "Wrong parameters"
@@ -174,6 +178,7 @@
 #define D_CMND_BLINKTIME "BlinkTime"
 #define D_CMND_BLINKCOUNT "BlinkCount"
 #define D_CMND_SENSOR "Sensor"
+#define D_CMND_DRIVER "Driver"
 #define D_CMND_SAVEDATA "SaveData"
 #define D_CMND_SETOPTION "SetOption"
 #define D_CMND_TEMPERATURE_RESOLUTION "TempRes"
@@ -184,6 +189,7 @@
 #define D_CMND_FREQUENCY_RESOLUTION "FreqRes"
 #define D_CMND_CURRENT_RESOLUTION "AmpRes"
 #define D_CMND_ENERGY_RESOLUTION "EnergyRes"
+#define D_CMND_WEIGHT_RESOLUTION "WeightRes"
 #define D_CMND_MODULE "Module"
 #define D_CMND_MODULES "Modules"
 #define D_CMND_GPIO "GPIO"
@@ -274,6 +280,7 @@
   #define D_JSON_WITH_IP_ADDRESS "with IP address"
 #define D_CMND_WEBPASSWORD "WebPassword"
 #define D_CMND_WEBLOG "WebLog"
+#define D_CMND_WEBREFRESH "WebRefresh"
 #define D_CMND_WEBSEND "WebSend"
 #define D_CMND_EMULATION "Emulation"
 
@@ -286,12 +293,10 @@
 #define D_CMND_CURRENTLOW "CurrentLow"
 #define D_CMND_CURRENTHIGH "CurrentHigh"
 #define D_CMND_ENERGYRESET "EnergyReset"
-#define D_CMND_POWERCAL "PowerCal"
 #define D_CMND_POWERSET "PowerSet"
-#define D_CMND_VOLTAGECAL "VoltageCal"
 #define D_CMND_VOLTAGESET "VoltageSet"
-#define D_CMND_CURRENTCAL "CurrentCal"
 #define D_CMND_CURRENTSET "CurrentSet"
+#define D_CMND_FREQUENCYSET "FrequencySet"
 #define D_CMND_MAXPOWER "MaxPower"
 #define D_CMND_MAXPOWERHOLD "MaxPowerHold"
 #define D_CMND_MAXPOWERWINDOW "MaxPowerWindow"
@@ -316,6 +321,7 @@
 #define D_CMND_LEDTABLE "LedTable"
 #define D_CMND_FADE "Fade"
 #define D_CMND_PIXELS "Pixels"
+#define D_CMND_RGBWWTABLE "RGBWWTable"
 #define D_CMND_ROTATION "Rotation"
 #define D_CMND_SCHEME "Scheme"
 #define D_CMND_SPEED "Speed"
@@ -419,7 +425,8 @@ enum UnitNames {
   UNIT_SECTORS,
   UNIT_VOLT,
   UNIT_WATT,
-  UNIT_WATTHOUR };
+  UNIT_WATTHOUR,
+  UNIT_HERTZ };
 const char kUnitNames[] PROGMEM =
   D_UNIT_AMPERE "|"
   D_UNIT_HOUR "|"
@@ -439,7 +446,8 @@ const char kUnitNames[] PROGMEM =
   D_UNIT_SECTORS "|"
   D_UNIT_VOLT "|"
   D_UNIT_WATT "|"
-  D_UNIT_WATTHOUR ;
+  D_UNIT_WATTHOUR "|"
+  D_UNIT_HERTZ ;
 
 const char S_JSON_COMMAND_NVALUE_SPACE_UNIT[] PROGMEM =       "{\"%s\":\"%d %s\"}";
 const char S_JSON_COMMAND_LVALUE_SPACE_UNIT[] PROGMEM =       "{\"%s\":\"%lu %s\"}";
@@ -466,6 +474,9 @@ const char S_JSON_COMMAND_INDEX_NVALUE_ACTIVE_NVALUE[] PROGMEM = "{\"%s%d\":\"%d
 
 const char S_JSON_SENSOR_INDEX_NVALUE[] PROGMEM =            "{\"" D_CMND_SENSOR "%d\":%d}";
 const char S_JSON_SENSOR_INDEX_SVALUE[] PROGMEM =            "{\"" D_CMND_SENSOR "%d\":\"%s\"}";
+
+const char S_JSON_DRIVER_INDEX_NVALUE[] PROGMEM =            "{\"" D_CMND_DRIVER "%d\":%d}";
+const char S_JSON_DRIVER_INDEX_SVALUE[] PROGMEM =            "{\"" D_CMND_DRIVER "%d\":\"%s\"}";
 
 const char JSON_SNS_TEMP[] PROGMEM = "%s,\"%s\":{\"" D_JSON_TEMPERATURE "\":%s}";
 const char JSON_SNS_TEMPHUM[] PROGMEM = "%s,\"%s\":{\"" D_JSON_TEMPERATURE "\":%s,\"" D_JSON_HUMIDITY "\":%s}";
@@ -528,7 +539,6 @@ const char S_CONFIGURATION[] PROGMEM = D_CONFIGURATION;
 const char S_CONFIGURE_MODULE[] PROGMEM = D_CONFIGURE_MODULE;
 const char S_CONFIGURE_WIFI[] PROGMEM = D_CONFIGURE_WIFI;
 const char S_NO_NETWORKS_FOUND[] PROGMEM = D_NO_NETWORKS_FOUND;
-const char S_CONFIGURE_MQTT[] PROGMEM = D_CONFIGURE_MQTT;
 const char S_CONFIGURE_LOGGING[] PROGMEM = D_CONFIGURE_LOGGING;
 const char S_CONFIGURE_OTHER[] PROGMEM = D_CONFIGURE_OTHER;
 const char S_SAVE_CONFIGURATION[] PROGMEM = D_SAVE_CONFIGURATION;

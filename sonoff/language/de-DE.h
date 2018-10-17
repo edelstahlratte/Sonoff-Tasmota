@@ -124,9 +124,9 @@
 #define D_PORT "Port"
 #define D_POWER_FACTOR "Leistungsfaktor"
 #define D_POWERUSAGE "Leistung"
-#define D_POWERUSAGE_ACTIVE "Active Power"
-#define D_POWERUSAGE_APPARENT "Apparent Power"
-#define D_POWERUSAGE_REACTIVE "Reactive Power"
+#define D_POWERUSAGE_ACTIVE "Wirkleistung"
+#define D_POWERUSAGE_APPARENT "Scheinleistung"
+#define D_POWERUSAGE_REACTIVE "Blindleistung"
 #define D_PRESSURE "Luftdruck"
 #define D_PRESSUREATSEALEVEL "Luftdruck auf Meereshöhe"
 #define D_PROGRAM_FLASH_SIZE "Ges. Flash Speicher"
@@ -163,9 +163,18 @@
 #define D_USER "Benutzer"
 #define D_UTC_TIME "UTC"
 #define D_UV_INDEX "UV-Index"
+#define D_UV_INDEX_1 "Niedrig"
+#define D_UV_INDEX_2 "Mittel"
+#define D_UV_INDEX_3 "Hoch"
+#define D_UV_INDEX_4 "Intensiv"
+#define D_UV_INDEX_5 "Gefährlich"
+#define D_UV_INDEX_6 "Schädlich"
+#define D_UV_INDEX_7 "Messwert!"
 #define D_UV_LEVEL "UV-Level"
+#define D_UV_POWER "UV Intensität"
 #define D_VERSION "Version"
 #define D_VOLTAGE "Spannung"
+#define D_WEIGHT "Weight"
 #define D_WARMLIGHT "warm"
 #define D_WEB_SERVER "Web-Server"
 
@@ -447,6 +456,12 @@
 #define D_GY_AXIS "Gyroskop Y-Achse"
 #define D_GZ_AXIS "Gyroskop Z-Achse"
 
+// xsns_34_hx711.ino
+#define D_HX_CAL_REMOVE "Wägegut entfernen"
+#define D_HX_CAL_REFERENCE "Referenzgewicht auflegen"
+#define D_HX_CAL_DONE "kalibriert"
+#define D_HX_CAL_FAIL "Kalibrierung fehlgeschlagen"
+
 // sonoff_template.h
 #define D_SENSOR_NONE     "None"
 #define D_SENSOR_DHT11    "DHT11"
@@ -467,8 +482,10 @@
 #define D_SENSOR_IRRECV   "IRRecv"
 #define D_SENSOR_MHZ_RX   "MHZ Rx"
 #define D_SENSOR_MHZ_TX   "MHZ Tx"
-#define D_SENSOR_PZEM_RX  "PZEM Rx"
-#define D_SENSOR_PZEM_TX  "PZEM Tx"
+#define D_SENSOR_PZEM004_RX  "PZEM004 Rx"
+#define D_SENSOR_PZEM016_RX  "PZEM016 Rx"
+#define D_SENSOR_PZEM017_RX  "PZEM017 Rx"
+#define D_SENSOR_PZEM0XX_TX  "PZEM0XX Tx"
 #define D_SENSOR_SAIR_RX  "SAir Rx"
 #define D_SENSOR_SAIR_TX  "SAir Tx"
 #define D_SENSOR_SPI_CS   "SPI CS"
@@ -488,12 +505,16 @@
 #define D_SENSOR_TM1638_CLK "TM16 CLK"
 #define D_SENSOR_TM1638_DIO "TM16 DIO"
 #define D_SENSOR_TM1638_STB "TM16 STB"
+#define D_SENSOR_HX711_SCK "HX711 SCK"
+#define D_SENSOR_HX711_DAT "HX711 DAT"
 
 // Units
 #define D_UNIT_AMPERE "A"
 #define D_UNIT_CENTIMETER "cm"
 #define D_UNIT_HERTZ "Hz"
 #define D_UNIT_HOUR "h"
+#define D_UNIT_INCREMENTS "inc"
+#define D_UNIT_KILOGRAM "kg"
 #define D_UNIT_KILOOHM "kOhm"
 #define D_UNIT_KILOWATTHOUR "kWh"
 #define D_UNIT_LUX "lx"
@@ -514,6 +535,7 @@
 #define D_UNIT_VOLT "V"
 #define D_UNIT_WATT "W"
 #define D_UNIT_WATTHOUR "Wh"
+#define D_UNIT_WATT_METER_QUADRAT "W/m²"
 
 // Log message prefix
 #define D_LOG_APPLICATION "APP: "  // Application
